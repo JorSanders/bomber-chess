@@ -3,7 +3,7 @@ import { SIZE, SQUARES, WALK_STEPS, attackedSquares, columnOf, onBoard, rowOf, s
 export const TICKS_PER_SECOND = 20;
 export const ROUND_SECONDS = 120;
 export const STEPS_PER_SQUARE = 6;
-export const FUSE_TICKS = 30;
+export const FUSE_TICKS = 50;
 export const BLAST_TICKS = 8;
 export const COLOURS = ["white", "black"];
 export const DROP_ORDER = ["queen", "rook", "bishop", "knight", "pawn"];
