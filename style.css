@@ -5,8 +5,6 @@
   --rubble-line: #4a4a4a;
   --blast: #ff7a1a;
   --bomb-body: #fbf6ec;
-  --white-ring: var(--turquoise);
-  --black-ring: var(--pink);
   --board: min(100vw - 2 * var(--space-4), 100dvh - 16rem, 520px);
   --square: calc(var(--board) / 8);
   --tick: 50ms;
@@ -228,10 +226,10 @@ body {
   height: var(--square);
   display: grid;
   place-items: center;
-  font-size: calc(var(--square) * 0.74);
+  font-size: calc(var(--square) * 0.82);
   line-height: 1;
   color: var(--ink);
-  isolation: isolate;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
   pointer-events: none;
   transition: transform var(--tick) linear;
 }
@@ -240,24 +238,8 @@ body {
   transition: none;
 }
 
-.king::before {
-  content: "";
-  position: absolute;
-  width: 84%;
-  height: 84%;
-  border-radius: var(--radius-full);
-  background: var(--white);
-  border: 3px solid var(--white-ring);
-  z-index: -1;
-}
-
-.king.black::before {
-  border-color: var(--black-ring);
-}
-
-.king.armed::before {
-  border-color: var(--blast);
-  box-shadow: 0 0 0 2px rgba(255, 122, 26, 0.4);
+.king.armed {
+  filter: drop-shadow(0 0 3px var(--blast)) drop-shadow(0 0 6px var(--blast));
 }
 
 .king.dead {
@@ -270,17 +252,17 @@ body {
 
 .next-badge {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 2%;
+  right: 2%;
   display: grid;
   place-items: center;
-  width: 44%;
-  height: 44%;
-  font-size: calc(var(--square) * 0.3);
+  width: 40%;
+  height: 40%;
+  font-size: calc(var(--square) * 0.26);
   line-height: 1;
   color: var(--ink);
-  background: var(--yellow);
-  border: 2px solid var(--ink);
+  background: var(--white);
+  border: 1px solid rgba(0, 0, 0, 0.4);
   border-radius: var(--radius-full);
 }
 
@@ -302,11 +284,11 @@ body {
 }
 
 .player[data-colour="white"] h2 span {
-  color: var(--white-ring);
+  color: var(--primary);
 }
 
 .player[data-colour="black"] h2 span {
-  color: var(--black-ring);
+  color: var(--secondary);
 }
 
 .inventory {
