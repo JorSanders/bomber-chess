@@ -45,7 +45,7 @@ function applyModeFromUrl() {
 }
 
 function readSeed() {
-  const requested = Number(parameters.get("seed"));
+  const requested = parameters.has("seed") ? Number(parameters.get("seed")) : NaN;
   if (Number.isInteger(requested) && requested >= 0 && requested < 2 ** 32 && !state) return requested;
   return Math.floor(Math.random() * 2 ** 32);
 }
