@@ -1,5 +1,5 @@
 import { createBot } from "./bot.js";
-import { COLOURS, TICKS_PER_SECOND, createGame, step, threatenedSquares } from "./game.js";
+import { COLOURS, TICKS_PER_SECOND, createGame, step } from "./game.js";
 import { KEY_HELP, createInput } from "./input.js";
 import { createBoardView, createInventoryView, formatTime } from "./render.js";
 
@@ -73,7 +73,7 @@ function startGame() {
 function render(force) {
   if (!force && state.tick === renderedTick) return;
   renderedTick = state.tick;
-  renderBoard(state, threatenedSquares(state));
+  renderBoard(state);
   for (const colour of COLOURS) renderInventory[colour](state);
   elements.timer.textContent = formatTime(state.ticksLeft);
   if (state.over && elements.status.textContent !== statusText()) elements.status.textContent = statusText();

@@ -13,7 +13,7 @@ Live (once published): https://bomber-chess.jor.dev/
 5. There is one drop button and it always drops your best piece: a queen if you have one, else a rook, bishop, knight, and finally a pawn. Pawns never run out. Every other piece is out of your hands while it is fused and comes back to your inventory the moment it goes off, so a queen is one blast at a time, not one blast ever. There is no limit on how many pieces you can have fused, only that you cannot drop on a square that already holds one.
 6. The board starts with about 45 percent rubble, except around the two corners where the kings start (white at a1, black at h8). Blowing up rubble has a 50 percent chance of uncovering a piece: a knight most often, then a bishop, then a rook, rarely a queen. Walk over it to pick it up. A blast destroys a piece that is still lying on the ground.
 7. Each player starts with one knight besides the endless pawns.
-8. Dashed outlines show every square the fused pieces will hit if nothing changes. Blasts show as an orange square with a star.
+8. Nothing warns you where a fused piece will hit. You read the piece and its lines yourself, the way you read a bomb's range in Bomberman. Blasts are flames that linger for a moment.
 9. The round lasts two minutes, then it is a draw.
 
 I have only tuned the fuse, the walking speed and the rubble density by feel on my own machine. None of it is balanced yet.

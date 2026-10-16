@@ -3,7 +3,7 @@ import { COLOURS, DROP_ORDER, FUSE_TICKS, TICKS_PER_SECOND, nextPiece, pieceAt, 
 
 const PIECE_LABELS = { pawn: "pawn", knight: "knight", bishop: "bishop", rook: "rook", queen: "queen" };
 
-function describeSquare(state, square, threatened) {
+function describeSquare(state, square) {
   const parts = [squareName(square)];
   if (state.blocks[square]) parts.push("rubble");
   if (state.pickups[square]) parts.push(`${PIECE_LABELS[state.pickups[square]]} to pick up`);
@@ -11,8 +11,7 @@ function describeSquare(state, square, threatened) {
   if (piece) parts.push(`${piece.colour} ${PIECE_LABELS[piece.type]} fused`);
   const player = playerAt(state, square);
   if (player) parts.push(`${player.colour} king`);
-  if (state.blasts[square] > 0) parts.push("blast");
-  else if (threatened[square]) parts.push("threatened");
+  if (state.blasts[square] > 0) parts.push("flames");
   return parts.join(", ");
 }
 
@@ -30,7 +29,7 @@ export function createBoardView(boardElement) {
     cells.push(cell);
   }
 
-  return function renderBoard(state, threatened) {
+  return function renderBoard(state) {
     for (let square = 0; square < SQUARES; square += 1) {
       const cell = cells[square];
       const piece = pieceAt(state, square);
@@ -49,8 +48,7 @@ export function createBoardView(boardElement) {
       cell.classList.toggle("block", state.blocks[square] === 1);
       cell.classList.toggle("stacked", piece !== null && player !== null);
       cell.classList.toggle("blast", state.blasts[square] > 0);
-      cell.classList.toggle("threat", state.blasts[square] === 0 && threatened[square] === 1);
-      cell.setAttribute("aria-label", describeSquare(state, square, threatened));
+      cell.setAttribute("aria-label", describeSquare(state, square));
     }
   };
 }

@@ -4,9 +4,6 @@
   --rubble: #6b6b6b;
   --rubble-line: #4a4a4a;
   --blast: #ff7a1a;
-  --on-blast: #1a1000;
-  --threat-fill: rgba(255, 122, 26, 0.35);
-  --threat-edge: rgba(60, 30, 0, 0.6);
   --bomb-body: #fbf6ec;
   --white-ring: var(--turquoise);
   --black-ring: var(--pink);
@@ -115,29 +112,21 @@ body {
   background-image: repeating-linear-gradient(45deg, transparent 0, transparent 6px, var(--rubble-line) 6px, var(--rubble-line) 8px);
 }
 
-.cell.threat::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--threat-fill);
-  border: 2px dashed var(--threat-edge);
-  pointer-events: none;
-}
-
 .cell.blast {
   background-color: var(--blast);
-  background-image: none;
+  background-image: radial-gradient(circle at 50% 55%, #fff4b0 0 16%, #ffc02a 34%, #ff7a1a 58%, #c8321a 100%);
+  animation: flicker 0.16s steps(2) infinite;
 }
 
-.cell.blast::after {
-  content: "✸";
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  font-size: calc(var(--square) * 0.8);
-  color: var(--on-blast);
-  pointer-events: none;
+@keyframes flicker {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+
+  50% {
+    filter: brightness(1.3);
+  }
 }
 
 .cell > span {
