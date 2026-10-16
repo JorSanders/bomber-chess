@@ -238,6 +238,14 @@ body {
   transition: none;
 }
 
+/* White's pieces are white glyphs with a thin dark outline, so they read on the light squares too. */
+.king.white .king-glyph,
+.piece.white .bomb {
+  color: var(--white);
+  -webkit-text-stroke: 0.035em var(--ink);
+  paint-order: stroke fill;
+}
+
 .king.armed {
   filter: drop-shadow(0 0 3px var(--blast)) drop-shadow(0 0 6px var(--blast));
 }
