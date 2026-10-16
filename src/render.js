@@ -38,7 +38,7 @@ export function createBoardView(boardElement) {
     kings[colour] = king;
   }
 
-  /** Kings are overlays placed by their walking position, in squares. A king on its own fused piece shrinks into the corner, a dead one topples. */
+  /** Kings are overlays placed by their walking position, in squares. A king on a fused piece gets an orange ring, a dead one topples. */
   function renderKing(state, colour) {
     const player = state.players[colour];
     const king = kings[colour];
@@ -46,10 +46,10 @@ export function createBoardView(boardElement) {
     const row = player.y / STEPS_PER_SQUARE;
     let transform = `translate(${(column * 100).toFixed(2)}%, ${(row * 100).toFixed(2)}%)`;
     if (!player.alive) transform += " rotate(90deg)";
-    else if (pieceAt(state, player.square)) transform += " translate(24%, -24%) scale(0.6)";
     king.style.transform = transform;
     king.classList.toggle("teleport", state.tick === 0);
     king.classList.toggle("dead", !player.alive);
+    king.classList.toggle("armed", player.alive && pieceAt(state, player.square) !== null);
   }
 
   return function renderBoard(state) {
@@ -57,13 +57,15 @@ export function createBoardView(boardElement) {
       const cell = cells[square];
       const piece = pieceAt(state, square);
       const pickup = state.pickups[square];
-      let content = "";
-      if (pickup) content += `<span class="pickup" aria-hidden="true"><span class="pickup-tag">+${GLYPHS.white[pickup]}</span></span>`;
-      if (piece) {
-        const fuse = Math.max(0, piece.fuse / FUSE_TICKS);
-        content += `<span class="piece ${piece.colour}" style="--fuse: ${fuse.toFixed(2)}" aria-hidden="true"><span class="bomb">${GLYPHS[piece.colour][piece.type]}</span></span>`;
+      const key = `${pickup || ""}|${piece ? piece.id : ""}`;
+      if (cell.dataset.key !== key) {
+        let content = "";
+        if (pickup) content += `<span class="pickup" aria-hidden="true"><span class="pickup-tag">+${GLYPHS.white[pickup]}</span></span>`;
+        if (piece) content += `<span class="piece ${piece.colour}" aria-hidden="true"><span class="bomb">${GLYPHS[piece.colour][piece.type]}</span></span>`;
+        cell.innerHTML = content;
+        cell.dataset.key = key;
       }
-      if (content !== cell.innerHTML) cell.innerHTML = content;
+      if (piece) cell.querySelector(".piece").style.setProperty("--fuse", Math.max(0, piece.fuse / FUSE_TICKS).toFixed(2));
       cell.classList.toggle("block", state.blocks[square] === 1);
       cell.classList.toggle("stacked", piece !== null && playerAt(state, square) !== null);
       cell.classList.toggle("blast", state.blasts[square] > 0);
@@ -77,8 +79,8 @@ function inventoryCount(player, type) {
   return type === "pawn" ? "∞" : String(player.inventory[type]);
 }
 
-/** Shows a player's pieces, best first, and marks the one the next drop uses. */
-export function createInventoryView(container, colour) {
+/** Shows a player's pieces, best first, marks the one the next drop uses and spells it out in the next drop line. */
+export function createInventoryView(container, nextDropElement, colour) {
   const slots = {};
   for (const type of DROP_ORDER) {
     const slot = document.createElement("span");
@@ -90,6 +92,8 @@ export function createInventoryView(container, colour) {
   return function renderInventory(state) {
     const player = state.players[colour];
     const next = nextPiece(player);
+    const nextText = `Drops ${GLYPHS[colour][next]} ${PIECE_LABELS[next]} next`;
+    if (nextDropElement.textContent !== nextText) nextDropElement.textContent = nextText;
     for (const type of DROP_ORDER) {
       const slot = slots[type];
       const count = inventoryCount(player, type);

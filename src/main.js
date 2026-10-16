@@ -1,5 +1,6 @@
+import { GLYPHS } from "./chess.js";
 import { createBot } from "./bot.js";
-import { COLOURS, TICKS_PER_SECOND, createGame, step } from "./game.js";
+import { COLOURS, TICKS_PER_SECOND, createGame, nextPiece, step } from "./game.js";
 import { KEY_HELP, createInput } from "./input.js";
 import { createBoardView, createInventoryView, formatTime } from "./render.js";
 
@@ -15,7 +16,9 @@ const elements = {
   dpad: document.getElementById("dpad"),
   keyHelp: { white: document.getElementById("keys-white"), black: document.getElementById("keys-black") },
   inventories: { white: document.getElementById("inventory-white"), black: document.getElementById("inventory-black") },
+  nextDrops: { white: document.getElementById("next-white"), black: document.getElementById("next-black") },
 };
+let dropButtonGlyph = null;
 
 const parameters = new URLSearchParams(location.search);
 document.documentElement.style.setProperty("--tick", `${1000 / TICKS_PER_SECOND}ms`);
@@ -23,7 +26,7 @@ const input = createInput();
 const renderBoard = createBoardView(elements.board);
 const renderInventory = {};
 for (const colour of COLOURS) {
-  renderInventory[colour] = createInventoryView(elements.inventories[colour], colour);
+  renderInventory[colour] = createInventoryView(elements.inventories[colour], elements.nextDrops[colour], colour);
   elements.keyHelp[colour].textContent = KEY_HELP[colour];
 }
 
@@ -76,6 +79,8 @@ function render(force) {
   renderedTick = state.tick;
   renderBoard(state);
   for (const colour of COLOURS) renderInventory[colour](state);
+  const dropGlyph = GLYPHS.white[nextPiece(state.players.white)];
+  if (dropButtonGlyph.textContent !== dropGlyph) dropButtonGlyph.textContent = dropGlyph;
   elements.timer.textContent = formatTime(state.ticksLeft);
   if (state.over && elements.status.textContent !== statusText()) elements.status.textContent = statusText();
 }
@@ -109,8 +114,9 @@ function buildDpad() {
       button.className = "dpad-button";
       if (row === 0 && column === 0) {
         button.classList.add("dpad-drop");
-        button.innerHTML = `<span aria-hidden="true">●</span><span class="visually-hidden">Drop your best piece</span>`;
+        button.innerHTML = `<span aria-hidden="true"></span><span class="visually-hidden">Drop your best piece</span>`;
         button.addEventListener("click", () => input.queueDrop("white"));
+        dropButtonGlyph = button.firstElementChild;
       } else if (row !== 0 && column !== 0) {
         elements.dpad.appendChild(document.createElement("span"));
         continue;

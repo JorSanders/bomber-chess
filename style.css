@@ -201,8 +201,12 @@ body {
   z-index: -1;
 }
 
+.piece {
+  transition: transform 150ms ease;
+}
+
 .cell.stacked .piece {
-  transform: translate(-12%, 12%) scale(0.85);
+  transform: translate(-26%, 26%) scale(0.5);
 }
 
 @keyframes pulse {
@@ -251,6 +255,11 @@ body {
   border-color: var(--black-ring);
 }
 
+.king.armed::before {
+  border-color: var(--blast);
+  box-shadow: 0 0 0 2px rgba(255, 122, 26, 0.4);
+}
+
 .king.dead {
   opacity: 0.55;
 }
@@ -263,7 +272,13 @@ body {
 
 .player h2 {
   font-size: var(--text-base);
+  margin-bottom: var(--space-1);
+}
+
+.next-drop {
   margin-bottom: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
 }
 
 .player[data-colour="white"] h2 span {
@@ -350,6 +365,7 @@ body[data-mode="bot"] .player[data-colour="black"] .keys {
 }
 
 .dpad-drop {
+  font-size: 2rem;
   color: var(--on-secondary-fill);
   background: var(--secondary-fill);
   border-color: transparent;
