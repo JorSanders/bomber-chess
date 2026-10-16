@@ -48,6 +48,7 @@ export function createGame(seed) {
       square: start,
       alive: true,
       inventory: { knight: 1, bishop: 0, rook: 0, queen: 0 },
+      active: "knight",
     };
   }
   return {
@@ -75,9 +76,19 @@ export function playerAt(state, square) {
   return COLOURS.map((colour) => state.players[colour]).find((player) => player.alive && player.square === square) || null;
 }
 
-/** The piece a player drops next: the best one in the inventory, and a pawn when it is empty. */
+/** The piece a player drops next. It only moves on when that piece is dropped, never when pieces come back or get picked up. */
 export function nextPiece(player) {
-  return DROP_ORDER.find((type) => type === "pawn" || player.inventory[type] > 0);
+  return player.active;
+}
+
+/** After dropping a piece the active one becomes the next best piece in hand, wrapping from pawn back to the top. */
+function advanceActive(player, dropped) {
+  const start = DROP_ORDER.indexOf(dropped);
+  for (let offset = 1; offset <= DROP_ORDER.length; offset += 1) {
+    const type = DROP_ORDER[(start + offset) % DROP_ORDER.length];
+    if (type === "pawn" || player.inventory[type] > 0) return type;
+  }
+  return "pawn";
 }
 
 export function canDrop(state, player) {
@@ -103,8 +114,9 @@ export function canMoveTo(state, player, square) {
 
 function dropPiece(state, player) {
   if (!canDrop(state, player)) return;
-  const type = nextPiece(player);
+  const type = player.active;
   if (type !== "pawn") player.inventory[type] -= 1;
+  player.active = advanceActive(player, type);
   state.pieces.push({ id: state.nextPieceId, type, colour: player.colour, square: player.square, fuse: FUSE_TICKS });
   state.nextPieceId += 1;
 }
