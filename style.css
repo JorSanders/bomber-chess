@@ -9,7 +9,7 @@
   --black-ring: var(--pink);
   --board: min(100vw - 2 * var(--space-4), 100dvh - 16rem, 520px);
   --square: calc(var(--board) / 8);
-  --walk: 300ms;
+  --tick: 50ms;
 }
 
 [hidden] {
@@ -229,7 +229,7 @@ body {
   color: var(--ink);
   isolation: isolate;
   pointer-events: none;
-  transition: transform var(--walk) linear;
+  transition: transform var(--tick) linear;
 }
 
 .king.teleport {
@@ -253,12 +253,6 @@ body {
 
 .king.dead {
   opacity: 0.55;
-  rotate: 90deg;
-}
-
-.king.stacked {
-  scale: 0.6;
-  translate: 24% -24%;
 }
 
 .players {

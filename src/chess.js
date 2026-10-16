@@ -10,6 +10,7 @@ export const GLYPHS = {
 };
 
 export const KING_STEPS = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+export const WALK_STEPS = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 const KNIGHT_STEPS = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
 const DIAGONALS = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
 const ORTHOGONALS = [[-1, 0], [1, 0], [0, -1], [0, 1]];

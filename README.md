@@ -6,7 +6,7 @@ Live (once published): https://bomber-chess.jor.dev/
 
 ## Rules
 
-1. You are a king. You move one square at a time in any of the eight directions, about three squares a second.
+1. You are a king. You walk up, down, left or right at about three squares a second, smoothly rather than square by square, and the game treats you as standing on whichever square your centre is on. If you press sideways while slightly off a lane and the lane ahead is open, you get nudged into it, the way Bomberman helps you around corners. No diagonals, kings walk through each other.
 2. Drop a piece on the square you stand on. One and a half seconds later it goes off and hits every square that piece attacks in chess: a rook sweeps its file and rank, a bishop its diagonals, a queen both, a knight jumps to its eight squares, a pawn hits the two diagonal squares ahead of it (ahead is up the board for white, down for black). Rubble, other pieces and kings stop sliding pieces, and that blocking square still gets hit. The square the piece stands on blows up too, so you cannot hide on top of your own piece.
 3. A king on a hit square is captured and loses. If both kings go in the same tick it is a draw. Blasts linger for a moment, so walking into one also kills you.
 4. A fused piece caught in a blast goes off immediately, so chains happen.
@@ -25,13 +25,13 @@ I have only tuned the fuse, the walking speed and the rubble density by feel on 
 
 ## Controls
 
-- White: WASD to move, hold two keys for a diagonal. Space drops your best piece.
+- White: WASD to move. Space drops your best piece.
 - Black: arrow keys to move, Enter drops your best piece.
 - Touch: the d-pad under the board moves white and the pink button in its middle drops. The inventory under each name shows what you hold and outlines the piece the next drop uses. The d-pad is hidden on desktop. I have only tried it with a mouse and a phone sized browser window so far, not on a real phone.
 
 ## How the game loop works
 
-The simulation in `src/game.js` runs at a fixed 10 ticks per second and is deterministic: a seed sets up the rubble and every later random choice (which rubble hides a piece, which piece) comes from the same seeded generator. Every tick takes one input per player, a held direction and an optional piece to drop. Nothing else goes in. The page just feeds it keyboard, touch or bot inputs.
+The simulation in `src/game.js` runs at a fixed 20 ticks per second and is deterministic: a seed sets up the rubble and every later random choice (which rubble hides a piece, which piece) comes from the same seeded generator. Kings walk in whole steps of a sixth of a square, one step per tick, so positions stay integers. Every tick takes one input per player, a held direction and whether to drop. Nothing else goes in. The page just feeds it keyboard, touch or bot inputs.
 
 That shape is on purpose. For peer to peer play the idea is lockstep: both phones run the same simulation from the same seed and only exchange inputs per tick, so no game state ever has to cross the wire and neither side can fudge it. The networking is not built yet.
 

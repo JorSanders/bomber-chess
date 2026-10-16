@@ -1,5 +1,5 @@
 import { createBot } from "./bot.js";
-import { COLOURS, MOVE_COOLDOWN_TICKS, TICKS_PER_SECOND, createGame, step } from "./game.js";
+import { COLOURS, TICKS_PER_SECOND, createGame, step } from "./game.js";
 import { KEY_HELP, createInput } from "./input.js";
 import { createBoardView, createInventoryView, formatTime } from "./render.js";
 
@@ -18,7 +18,7 @@ const elements = {
 };
 
 const parameters = new URLSearchParams(location.search);
-document.documentElement.style.setProperty("--walk", `${(MOVE_COOLDOWN_TICKS * 1000) / TICKS_PER_SECOND}ms`);
+document.documentElement.style.setProperty("--tick", `${1000 / TICKS_PER_SECOND}ms`);
 const input = createInput();
 const renderBoard = createBoardView(elements.board);
 const renderInventory = {};
@@ -111,10 +111,13 @@ function buildDpad() {
         button.classList.add("dpad-drop");
         button.innerHTML = `<span aria-hidden="true">●</span><span class="visually-hidden">Drop your best piece</span>`;
         button.addEventListener("click", () => input.queueDrop("white"));
+      } else if (row !== 0 && column !== 0) {
+        elements.dpad.appendChild(document.createElement("span"));
+        continue;
       } else {
         const direction = [row, column];
-        const arrows = { "-1,-1": "↖", "-1,0": "↑", "-1,1": "↗", "0,-1": "←", "0,1": "→", "1,-1": "↙", "1,0": "↓", "1,1": "↘" };
-        const names = { "-1,-1": "up left", "-1,0": "up", "-1,1": "up right", "0,-1": "left", "0,1": "right", "1,-1": "down left", "1,0": "down", "1,1": "down right" };
+        const arrows = { "-1,0": "↑", "0,-1": "←", "0,1": "→", "1,0": "↓" };
+        const names = { "-1,0": "up", "0,-1": "left", "0,1": "right", "1,0": "down" };
         button.innerHTML = `<span aria-hidden="true">${arrows[direction.join(",")]}</span><span class="visually-hidden">Move ${names[direction.join(",")]}</span>`;
         const hold = (event) => {
           event.preventDefault();

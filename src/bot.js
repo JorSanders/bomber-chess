@@ -1,7 +1,7 @@
-import { KING_STEPS, SQUARES, attackedSquares, stepFrom } from "./chess.js";
-import { canDrop, canMoveTo, createRandom, neighbours, nextPiece, pieceAt, playerAt, threatenedSquares } from "./game.js";
+import { SQUARES, WALK_STEPS, attackedSquares, stepFrom } from "./chess.js";
+import { STEPS_PER_SQUARE, canDrop, canMoveTo, createRandom, neighbours, nextPiece, pieceAt, playerAt, threatenedSquares } from "./game.js";
 
-const DROP_CHANCE_PER_TICK = 0.08;
+const DROP_CHANCE_PER_TICK = 0.04;
 
 function dangerMap(state) {
   const danger = threatenedSquares(state);
@@ -12,7 +12,7 @@ function dangerMap(state) {
 }
 
 function shuffledSteps(random) {
-  const steps = KING_STEPS.slice();
+  const steps = WALK_STEPS.slice();
   for (let index = steps.length - 1; index > 0; index -= 1) {
     const other = Math.floor(random() * (index + 1));
     [steps[index], steps[other]] = [steps[other], steps[index]];
@@ -42,7 +42,7 @@ function firstStepToward(state, player, isGoal, avoid, steps) {
 }
 
 function directionBetween(from, to) {
-  for (const [rowDelta, columnDelta] of KING_STEPS) {
+  for (const [rowDelta, columnDelta] of WALK_STEPS) {
     if (stepFrom(from, rowDelta, columnDelta) === to) return [rowDelta, columnDelta];
   }
   return null;
@@ -71,15 +71,22 @@ function shouldDrop(state, player, danger, wantsHit) {
 /** A simple opponent: step out of danger, drop a piece that hits the enemy king or rubble, otherwise walk toward the enemy. */
 export function createBot(colour, seed) {
   const random = createRandom(seed);
+  let lastMove = null;
+  function remember(decision) {
+    lastMove = decision.move;
+    return decision;
+  }
   return function decide(state) {
     const player = state.players[colour];
     const enemy = state.players[colour === "white" ? "black" : "white"];
     if (!player.alive) return { move: null, drop: false };
+    const betweenSquares = player.x % STEPS_PER_SQUARE !== 0 || player.y % STEPS_PER_SQUARE !== 0;
+    if (betweenSquares && lastMove) return { move: lastMove, drop: false };
     const danger = dangerMap(state);
     const steps = shuffledSteps(random);
 
     if (danger[player.square]) {
-      return { move: firstStepToward(state, player, (square) => !danger[square], new Uint8Array(SQUARES), steps), drop: false };
+      return remember({ move: firstStepToward(state, player, (square) => !danger[square], new Uint8Array(SQUARES), steps), drop: false });
     }
 
     if (enemy.alive && shouldDrop(state, player, danger, (square) => square === enemy.square)) return { move: null, drop: true };
@@ -90,14 +97,13 @@ export function createBot(colour, seed) {
       if (shouldDrop(state, player, danger, nearEnemy) || shouldDrop(state, player, danger, isRubble)) return { move: null, drop: true };
     }
 
-    if (player.cooldown > 0) return { move: null, drop: false };
     const isTarget = (square) => state.pickups[square] !== null || (enemy.alive && chebyshevDistance(square, enemy.square) <= 2);
     const towardTarget = firstStepToward(state, player, isTarget, danger, steps);
-    if (towardTarget) return { move: towardTarget, drop: false };
+    if (towardTarget) return remember({ move: towardTarget, drop: false });
     const safeStep = steps.find(([rowDelta, columnDelta]) => {
       const target = stepFrom(player.square, rowDelta, columnDelta);
       return target >= 0 && !danger[target] && canMoveTo(state, player, target);
     });
-    return { move: safeStep || null, drop: false };
+    return remember({ move: safeStep || null, drop: false });
   };
 }

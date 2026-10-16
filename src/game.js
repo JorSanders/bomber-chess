@@ -1,10 +1,10 @@
-import { KING_STEPS, SQUARES, attackedSquares, columnOf, rowOf, squareIndex, stepFrom } from "./chess.js";
+import { SIZE, SQUARES, WALK_STEPS, attackedSquares, columnOf, onBoard, rowOf, squareIndex, stepFrom } from "./chess.js";
 
-export const TICKS_PER_SECOND = 10;
+export const TICKS_PER_SECOND = 20;
 export const ROUND_SECONDS = 120;
-export const MOVE_COOLDOWN_TICKS = 3;
-export const FUSE_TICKS = 15;
-export const BLAST_TICKS = 4;
+export const STEPS_PER_SQUARE = 6;
+export const FUSE_TICKS = 30;
+export const BLAST_TICKS = 8;
 export const COLOURS = ["white", "black"];
 export const DROP_ORDER = ["queen", "rook", "bishop", "knight", "pawn"];
 
@@ -12,6 +12,7 @@ const BLOCK_CHANCE = 0.45;
 const PICKUP_CHANCE = 0.5;
 const PICKUP_WEIGHTS = [["knight", 4], ["bishop", 3], ["rook", 2], ["queen", 1]];
 const START_SQUARES = { white: squareIndex(7, 0), black: squareIndex(0, 7) };
+const MAX_POSITION = (SIZE - 1) * STEPS_PER_SQUARE;
 
 /** A small seeded random generator (mulberry32), so a seed gives the same game on every device. */
 export function createRandom(seed) {
@@ -39,11 +40,13 @@ export function createGame(seed) {
   }
   const players = {};
   for (const colour of COLOURS) {
+    const start = START_SQUARES[colour];
     players[colour] = {
       colour,
-      square: START_SQUARES[colour],
+      x: columnOf(start) * STEPS_PER_SQUARE,
+      y: rowOf(start) * STEPS_PER_SQUARE,
+      square: start,
       alive: true,
-      cooldown: 0,
       inventory: { knight: 1, bishop: 0, rook: 0, queen: 0 },
     };
   }
@@ -81,10 +84,21 @@ export function canDrop(state, player) {
   return player.alive && pieceAt(state, player.square) === null;
 }
 
+/** The one or two squares a king covers while it walks between them. */
+function coveredSquares(player) {
+  const squares = new Set();
+  for (const row of [Math.floor(player.y / STEPS_PER_SQUARE), Math.ceil(player.y / STEPS_PER_SQUARE)]) {
+    for (const column of [Math.floor(player.x / STEPS_PER_SQUARE), Math.ceil(player.x / STEPS_PER_SQUARE)]) {
+      squares.add(squareIndex(row, column));
+    }
+  }
+  return [...squares];
+}
+
+/** A king can walk onto a square without rubble, and past a fused piece only while it still stands on it. Kings walk through each other. */
 export function canMoveTo(state, player, square) {
-  if (square < 0 || state.blocks[square] || pieceAt(state, square)) return false;
-  const other = playerAt(state, square);
-  return other === null || other === player;
+  if (square < 0 || state.blocks[square]) return false;
+  return pieceAt(state, square) === null || coveredSquares(player).includes(square);
 }
 
 function dropPiece(state, player) {
@@ -95,16 +109,55 @@ function dropPiece(state, player) {
   state.nextPieceId += 1;
 }
 
+function clampPosition(value) {
+  return Math.max(0, Math.min(MAX_POSITION, value));
+}
+
+/** Tries one step along one axis. Off the walking line the king first nudges sideways toward the open lane, like Bomberman's corner help. */
+function stepAlong(state, player, rowDelta, columnDelta) {
+  const alongRows = rowDelta !== 0;
+  const position = alongRows ? player.y : player.x;
+  const across = alongRows ? player.x : player.y;
+  const delta = alongRows ? rowDelta : columnDelta;
+  if (across % STEPS_PER_SQUARE === 0) {
+    const next = clampPosition(position + delta);
+    if (next === position) return false;
+    const lane = across / STEPS_PER_SQUARE;
+    const low = Math.floor(next / STEPS_PER_SQUARE);
+    const high = Math.ceil(next / STEPS_PER_SQUARE);
+    const entered = alongRows ? [squareIndex(low, lane), squareIndex(high, lane)] : [squareIndex(lane, low), squareIndex(lane, high)];
+    if (!entered.every((square) => canMoveTo(state, player, square))) return false;
+    if (alongRows) player.y = next;
+    else player.x = next;
+    return true;
+  }
+  const nearestLane = Math.round(across / STEPS_PER_SQUARE);
+  const current = Math.round(position / STEPS_PER_SQUARE);
+  const aheadRow = alongRows ? current + delta : nearestLane;
+  const aheadColumn = alongRows ? nearestLane : current + delta;
+  if (!onBoard(aheadRow, aheadColumn) || !canMoveTo(state, player, squareIndex(aheadRow, aheadColumn))) return false;
+  const nudge = Math.sign(nearestLane * STEPS_PER_SQUARE - across);
+  if (alongRows) player.x += nudge;
+  else player.y += nudge;
+  return true;
+}
+
+/** Walks one step per tick. Two held directions try the one the king is already moving along first, then the other. */
 function movePlayer(state, player, direction) {
-  if (player.cooldown > 0 || !direction) return;
-  const target = stepFrom(player.square, direction[0], direction[1]);
-  if (!canMoveTo(state, player, target)) return;
-  player.square = target;
-  player.cooldown = MOVE_COOLDOWN_TICKS;
-  const pickup = state.pickups[target];
+  if (!direction) return;
+  const [rowDelta, columnDelta] = direction;
+  const attempts = [];
+  if (rowDelta !== 0) attempts.push([rowDelta, 0]);
+  if (columnDelta !== 0) attempts.push([0, columnDelta]);
+  if (attempts.length === 2 && player.x % STEPS_PER_SQUARE !== 0) attempts.reverse();
+  for (const [stepRow, stepColumn] of attempts) {
+    if (stepAlong(state, player, stepRow, stepColumn)) break;
+  }
+  player.square = squareIndex(Math.round(player.y / STEPS_PER_SQUARE), Math.round(player.x / STEPS_PER_SQUARE));
+  const pickup = state.pickups[player.square];
   if (pickup) {
     player.inventory[pickup] += 1;
-    state.pickups[target] = null;
+    state.pickups[player.square] = null;
   }
 }
 
@@ -177,7 +230,6 @@ export function step(state, inputs) {
   for (const colour of COLOURS) {
     const player = state.players[colour];
     if (!player.alive) continue;
-    if (player.cooldown > 0) player.cooldown -= 1;
     const input = inputs[colour] || {};
     if (input.drop) dropPiece(state, player);
     movePlayer(state, player, input.move);
@@ -201,5 +253,5 @@ export function threatenedSquares(state) {
 }
 
 export function neighbours(square) {
-  return KING_STEPS.map(([rowDelta, columnDelta]) => stepFrom(square, rowDelta, columnDelta)).filter((target) => target >= 0);
+  return WALK_STEPS.map(([rowDelta, columnDelta]) => stepFrom(square, rowDelta, columnDelta)).filter((target) => target >= 0);
 }

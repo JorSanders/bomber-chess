@@ -1,5 +1,5 @@
 import { GLYPHS, SQUARES, squareName } from "./chess.js";
-import { COLOURS, DROP_ORDER, FUSE_TICKS, TICKS_PER_SECOND, nextPiece, pieceAt, playerAt } from "./game.js";
+import { COLOURS, DROP_ORDER, FUSE_TICKS, STEPS_PER_SQUARE, TICKS_PER_SECOND, nextPiece, pieceAt, playerAt } from "./game.js";
 
 const PIECE_LABELS = { pawn: "pawn", knight: "knight", bishop: "bishop", rook: "rook", queen: "queen" };
 
@@ -38,16 +38,18 @@ export function createBoardView(boardElement) {
     kings[colour] = king;
   }
 
-  /** Kings are overlays that slide between squares, so a move reads as walking instead of a jump. */
+  /** Kings are overlays placed by their walking position, in squares. A king on its own fused piece shrinks into the corner, a dead one topples. */
   function renderKing(state, colour) {
     const player = state.players[colour];
     const king = kings[colour];
-    const row = Math.floor(player.square / 8);
-    const column = player.square % 8;
-    king.style.transform = `translate(${column * 100}%, ${row * 100}%)`;
+    const column = player.x / STEPS_PER_SQUARE;
+    const row = player.y / STEPS_PER_SQUARE;
+    let transform = `translate(${(column * 100).toFixed(2)}%, ${(row * 100).toFixed(2)}%)`;
+    if (!player.alive) transform += " rotate(90deg)";
+    else if (pieceAt(state, player.square)) transform += " translate(24%, -24%) scale(0.6)";
+    king.style.transform = transform;
     king.classList.toggle("teleport", state.tick === 0);
     king.classList.toggle("dead", !player.alive);
-    king.classList.toggle("stacked", pieceAt(state, player.square) !== null);
   }
 
   return function renderBoard(state) {
