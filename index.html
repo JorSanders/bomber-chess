@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bomber-Chess: Bomberman on a chess board</title>
+  <meta name="description" content="Bomberman on a chess board. You are a king, the bombs are chess pieces, and each one blows up the squares it attacks. Blow up rubble to find more pieces, last king standing wins.">
+  <link rel="canonical" href="https://bomber-chess.jor.dev/">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f3f3f3" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121417" media="(prefers-color-scheme: dark)">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://bomber-chess.jor.dev/">
+  <meta property="og:title" content="Bomber-Chess: Bomberman on a chess board">
+  <meta property="og:description" content="Bomberman on a chess board. You are a king, the bombs are chess pieces, and each one blows up the squares it attacks. Blow up rubble to find more pieces, last king standing wins.">
+  <meta property="og:image" content="https://bomber-chess.jor.dev/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The title Bomber-Chess with a one line description of the game.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Bomber-Chess: Bomberman on a chess board">
+  <meta name="twitter:description" content="Bomberman on a chess board. You are a king, the bombs are chess pieces, and each one blows up the squares it attacks. Blow up rubble to find more pieces, last king standing wins.">
+  <meta name="twitter:image" content="https://bomber-chess.jor.dev/og-image.png">
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="icon" type="image/x-icon" sizes="32x32" href="./favicon.ico">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="preload" href="./brand/fonts/Montserrat-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./brand/fonts/Montserrat-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./brand/fonts/Montserrat-Bold.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./brand/fonts/SpaceMono-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="./brand/tokens.css">
+  <link rel="stylesheet" href="./brand/base.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="./brand/theme.js"></script>
+  <script type="module" src="./src/main.js"></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Bomber-Chess",
+    "url": "https://bomber-chess.jor.dev/",
+    "description": "Bomberman on a chess board. You are a king, the bombs are chess pieces, and each one blows up the squares it attacks. Blow up rubble to find more pieces, last king standing wins.",
+    "applicationCategory": "GameApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript",
+    "image": "https://bomber-chess.jor.dev/og-image.png",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+    "author": { "@type": "Person", "name": "Jor Sanders", "url": "https://jor.dev" }
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <a class="brand-link" href="https://jor.dev">
+      <img class="only-light" src="./brand/logo/wordmark.svg" alt="jor.dev" />
+      <img class="only-dark" src="./brand/logo/wordmark-on-dark.svg" alt="jor.dev" />
+    </a>
+    <div class="theme-picker" role="group" aria-label="Color scheme">
+      <button type="button" data-theme-choice="auto" aria-pressed="true">Auto</button>
+      <button type="button" data-theme-choice="light" aria-pressed="false">Light</button>
+      <button type="button" data-theme-choice="dark" aria-pressed="false">Dark</button>
+    </div>
+  </header>
+  <main class="app" id="main">
+    <header class="top-row">
+      <h1>Bomber-Chess</h1>
+      <span class="timer" id="timer" role="timer" aria-live="off">2:00</span>
+      <button type="button" id="new-game" class="button">New game</button>
+    </header>
+
+    <p class="status" id="status" aria-live="polite"></p>
+
+    <div class="board-wrap">
+      <div class="board" id="board" role="grid" aria-label="Board"></div>
+    </div>
+
+    <section class="players" aria-label="Players">
+      <div class="player" data-colour="white">
+        <h2><span aria-hidden="true">♔</span> White</h2>
+        <div class="inventory" id="inventory-white" role="group" aria-label="White's pieces"></div>
+        <p class="keys muted" id="keys-white"></p>
+        <div class="dpad" id="dpad" role="group" aria-label="Touch controls for white"></div>
+      </div>
+      <div class="player" data-colour="black">
+        <h2><span aria-hidden="true">♚</span> Black</h2>
+        <div class="inventory" id="inventory-black" role="group" aria-label="Black's pieces"></div>
+        <p class="keys muted" id="keys-black"></p>
+      </div>
+    </section>
+
+    <section class="controls" aria-label="Game settings">
+      <fieldset class="segmented">
+        <legend class="visually-hidden">Opponent</legend>
+        <label><input type="radio" name="mode" value="bot" checked><span>Versus bot</span></label>
+        <label><input type="radio" name="mode" value="two"><span>Two players, one keyboard</span></label>
+      </fieldset>
+    </section>
+
+    <section class="rules" aria-labelledby="rules-heading">
+      <h2 id="rules-heading">How it works</h2>
+      <ul>
+        <li>You are a king and move one square at a time, diagonals included.</li>
+        <li>Drop a piece where you stand. One and a half seconds later it attacks every square it could capture on, the way that piece moves in chess. A rook sweeps lines, a bishop diagonals, a knight jumps, a pawn hits the two diagonal squares ahead. Rubble, other pieces and kings stop sliding pieces.</li>
+        <li>A king on a hit square is captured and loses. A piece in a blast goes off at once. Pawns never run out, every other piece is used up when dropped, and you can have two pieces fused at a time.</li>
+        <li>Blow up rubble to uncover pieces lying on the ground. Walk over one to pick it up. Blasts destroy pieces that are still lying there.</li>
+        <li>Dashed squares show where the fused pieces will hit. The clock is two minutes, then it is a draw.</li>
+      </ul>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <p>Bomber-Chess is my mash-up of Bomberman and chess. You play a king on a chess board, the bombs are chess pieces, and each one blows up exactly the squares it attacks. Blow up the rubble to find bigger pieces, then catch the other king in a blast.</p>
+    <p>Nothing leaves your browser. This is an early prototype: two players on one keyboard or against a simple bot, with phone to phone play planned.</p>
+    <p class="site-footer-tagline">Provided free of charge, without tracking. For the love of the game.</p>
+    <p class="site-footer-meta">
+      <span>Made by <a href="https://jor.dev">Jor Sanders</a></span>
+      <a href="https://github.com/JorSanders/bomber-chess">Source on GitHub</a>
+      <a href="https://github.com/JorSanders/bomber-chess/issues">Found a problem?</a>
+    </p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,79 @@
+# Bomber-Chess
+
+Bomberman on a chess board. You are a king, the bombs are chess pieces, and each one blows up exactly the squares it attacks. I wanted a small real time game to try peer to peer play on phones, and dropping a knight as a bomb was too funny an idea to leave alone. This is the first playable prototype: two players on one keyboard, or against a simple bot. Phone to phone play is the plan, not something that exists yet.
+
+Live (once published): https://bomber-chess.jor.dev/
+
+## Rules
+
+1. You are a king. You move one square at a time in any of the eight directions, about three squares a second.
+2. Drop a piece on the square you stand on. One and a half seconds later it goes off and hits every square that piece attacks in chess: a rook sweeps its file and rank, a bishop its diagonals, a queen both, a knight jumps to its eight squares, a pawn hits the two diagonal squares ahead of it (ahead is up the board for white, down for black). Rubble, other pieces and kings stop sliding pieces, and that blocking square still gets hit. The square the piece stands on is not hit, because a piece never attacks its own square.
+3. A king on a hit square is captured and loses. If both kings go in the same tick it is a draw. Blasts linger for a moment, so walking into one also kills you.
+4. A fused piece caught in a blast goes off immediately, so chains happen.
+5. Pawns never run out. Every other piece is used up when you drop it. You can have two pieces fused at a time, and you cannot drop on a square that already holds a piece.
+6. The board starts with about 45 percent rubble, except around the two corners where the kings start (white at a1, black at h8). Blowing up rubble has a 50 percent chance of uncovering a piece: a knight most often, then a bishop, then a rook, rarely a queen. Walk over it to pick it up. A blast destroys a piece that is still lying on the ground.
+7. Each player starts with one knight besides the endless pawns.
+8. Dashed outlines show every square the fused pieces will hit if nothing changes. Blasts show as an orange square with a star.
+9. The round lasts two minutes, then it is a draw.
+
+I have only tuned the fuse, the walking speed and the rubble density by feel on my own machine. None of it is balanced yet.
+
+## Modes
+
+- **Versus bot**: you are white, black is a bot. It steps out of danger, drops a piece when that would hit your king, digs rubble now and then, and otherwise walks toward you or toward pieces lying around. It is not clever. This is the default on touch screens.
+- **Two players, one keyboard**: both kings are human. This is the default when a mouse or trackpad is detected.
+
+## Controls
+
+- White: WASD to move, hold two keys for a diagonal. Space drops the selected piece. Q and E cycle through the pieces you have, 1 to 5 pick pawn, knight, bishop, rook or queen directly.
+- Black: arrow keys to move, Enter drops the selected piece, comma and period cycle through the pieces.
+- Touch and mouse: the d-pad under the board moves white, the pink button in its middle drops the selected piece, and the inventory buttons under "White" select and drop that piece in one tap. The d-pad is hidden on desktop. Both inventories are clickable, so black can be played with the mouse too. I have only tried the d-pad with a mouse and a phone sized browser window so far, not on a real phone.
+
+## How the game loop works
+
+The simulation in `src/game.js` runs at a fixed 10 ticks per second and is deterministic: a seed sets up the rubble and every later random choice (which rubble hides a piece, which piece) comes from the same seeded generator. Every tick takes one input per player, a held direction and an optional piece to drop. Nothing else goes in. The page just feeds it keyboard, touch or bot inputs.
+
+That shape is on purpose. For peer to peer play the idea is lockstep: both phones run the same simulation from the same seed and only exchange inputs per tick, so no game state ever has to cross the wire and neither side can fudge it. The networking is not built yet.
+
+## Run locally
+
+ES modules need an HTTP server, so `file://` will not work.
+
+```sh
+npm run serve
+```
+
+Then open http://localhost:6768.
+
+Dev URL parameters: `?seed=<number>` replays a specific board for the first game, `?mode=bot|two` picks the opponent. New game keeps the mode and picks a fresh seed, and the address bar always shows the current seed so you can copy it.
+
+## Files
+
+```
+index.html             the page
+style.css              styles on top of the brand tokens, board colors and piece glyphs are content
+src/main.js            wiring: game loop, inputs, rendering, settings
+src/game.js            the deterministic simulation
+src/chess.js           board helpers and the attack pattern of each piece
+src/bot.js             the black bot
+src/input.js           keyboard and touch input per player
+src/render.js          board cells, inventory buttons and the timer
+brand/                 jor.dev tokens, base styles, theme picker, fonts and logos
+manifest.webmanifest   home screen name and icon
+CNAME, .nojekyll, robots.txt, sitemap.xml   GitHub Pages hosting
+```
+
+## Hosting
+
+Plain static files with relative paths, so it works on GitHub Pages at a custom domain or under a `/repo/` path.
+
+- `favicon.svg`, `favicon.ico` and `apple-touch-icon.png` come from the brand install script. `og-image.png` is the 1200 by 630 social preview rendered with the brand's `og-image.sh`.
+- `CNAME` contains `bomber-chess.jor.dev` and `.nojekyll` disables Jekyll. Add a DNS CNAME record `bomber-chess` pointing to `jorsanders.github.io` and enable Pages from the `main` branch, root folder.
+
+## Any issues?
+
+This is a hobby project I have spent quite some hours on. If you have any issues, feel free to open a GitHub issue or contact me. Otherwise, this code is unlicensed, so do whatever you want with it: https://unlicense.org/
+
+## Buy me a coffee
+
+Don't. If you let me know you used or enjoyed this, you have already made the best donation.
