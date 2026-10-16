@@ -41,12 +41,13 @@ export function createBoardView(boardElement) {
       if (pickup) content += `<span class="pickup" aria-hidden="true"><span class="pickup-tag">+${GLYPHS.white[pickup]}</span></span>`;
       if (piece) {
         const fuse = Math.max(0, piece.fuse / FUSE_TICKS);
-        content += `<span class="piece ${piece.colour}" style="--fuse: ${fuse.toFixed(2)}" aria-hidden="true">${GLYPHS[piece.colour][piece.type]}</span>`;
+        content += `<span class="piece ${piece.colour}" style="--fuse: ${fuse.toFixed(2)}" aria-hidden="true"><span class="bomb">${GLYPHS[piece.colour][piece.type]}</span></span>`;
       }
       if (player) content += `<span class="king ${player.colour}" aria-hidden="true">${GLYPHS[player.colour].king}</span>`;
       if (deadPlayer) content += `<span class="king ${deadPlayer.colour} dead" aria-hidden="true">${GLYPHS[deadPlayer.colour].king}</span>`;
       if (content !== cell.innerHTML) cell.innerHTML = content;
       cell.classList.toggle("block", state.blocks[square] === 1);
+      cell.classList.toggle("stacked", piece !== null && player !== null);
       cell.classList.toggle("blast", state.blasts[square] > 0);
       cell.classList.toggle("threat", state.blasts[square] === 0 && threatened[square] === 1);
       cell.setAttribute("aria-label", describeSquare(state, square, threatened));

@@ -178,30 +178,44 @@ body {
 }
 
 .piece {
-  isolation: isolate;
   font-size: calc(var(--square) * 0.5);
   color: var(--ink);
+}
+
+.bomb {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 84%;
+  height: 84%;
+  isolation: isolate;
   animation: pulse calc(0.15s + var(--fuse) * 0.45s) ease-in-out infinite;
 }
 
-.piece::before {
+.bomb::before {
   content: "";
   position: absolute;
-  width: 84%;
-  height: 84%;
+  inset: 0;
   border-radius: var(--radius-full);
   background: conic-gradient(var(--blast) calc(var(--fuse) * 360deg), rgba(0, 0, 0, 0.3) 0);
   z-index: -2;
 }
 
-.piece::after {
+.bomb::after {
   content: "";
   position: absolute;
-  width: 64%;
-  height: 64%;
+  inset: 12%;
   border-radius: var(--radius-full);
   background: var(--bomb-body);
   z-index: -1;
+}
+
+.cell.stacked .piece {
+  transform: translate(-12%, 12%) scale(0.85);
+}
+
+.cell.stacked .king {
+  transform: translate(24%, -24%) scale(0.6);
 }
 
 @keyframes pulse {
