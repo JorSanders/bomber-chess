@@ -1,5 +1,5 @@
-import { GLYPHS, PIECE_TYPES, SQUARES, squareName } from "./chess.js";
-import { COLOURS, FUSE_TICKS, TICKS_PER_SECOND, pieceAt, playerAt } from "./game.js";
+import { GLYPHS, SQUARES, squareName } from "./chess.js";
+import { COLOURS, DROP_ORDER, FUSE_TICKS, TICKS_PER_SECOND, nextPiece, pieceAt, playerAt } from "./game.js";
 
 const PIECE_LABELS = { pawn: "pawn", knight: "knight", bishop: "bishop", rook: "rook", queen: "queen" };
 
@@ -58,29 +58,26 @@ function inventoryCount(player, type) {
   return type === "pawn" ? "∞" : String(player.inventory[type]);
 }
 
-/** Builds the inventory buttons of a player; clicking one selects and drops that piece. */
-export function createInventoryView(container, colour, onDrop) {
-  const buttons = {};
-  for (const type of PIECE_TYPES) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "inventory-button";
-    button.dataset.type = type;
-    button.setAttribute("aria-pressed", "false");
-    button.innerHTML = `<span class="glyph" aria-hidden="true">${GLYPHS[colour][type]}</span><span class="count"></span><span class="visually-hidden">${PIECE_LABELS[type]}</span>`;
-    button.addEventListener("click", () => onDrop(type, button));
-    container.appendChild(button);
-    buttons[type] = button;
+/** Shows a player's pieces, best first, and marks the one the next drop uses. */
+export function createInventoryView(container, colour) {
+  const slots = {};
+  for (const type of DROP_ORDER) {
+    const slot = document.createElement("span");
+    slot.className = "inventory-slot";
+    slot.innerHTML = `<span class="glyph" aria-hidden="true">${GLYPHS[colour][type]}</span><span class="count"></span><span class="visually-hidden">${PIECE_LABELS[type]}</span>`;
+    container.appendChild(slot);
+    slots[type] = slot;
   }
-  return function renderInventory(state, selectedType) {
+  return function renderInventory(state) {
     const player = state.players[colour];
-    for (const type of PIECE_TYPES) {
-      const button = buttons[type];
+    const next = nextPiece(player);
+    for (const type of DROP_ORDER) {
+      const slot = slots[type];
       const count = inventoryCount(player, type);
-      const countElement = button.querySelector(".count");
+      const countElement = slot.querySelector(".count");
       if (countElement.textContent !== count) countElement.textContent = count;
-      button.disabled = type !== "pawn" && player.inventory[type] <= 0;
-      button.setAttribute("aria-pressed", String(type === selectedType));
+      slot.classList.toggle("empty", type !== "pawn" && player.inventory[type] <= 0);
+      slot.classList.toggle("next", type === next);
     }
   };
 }

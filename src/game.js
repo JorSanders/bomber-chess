@@ -1,12 +1,12 @@
-import { KING_STEPS, PIECE_TYPES, SQUARES, attackedSquares, columnOf, rowOf, squareIndex, stepFrom } from "./chess.js";
+import { KING_STEPS, SQUARES, attackedSquares, columnOf, rowOf, squareIndex, stepFrom } from "./chess.js";
 
 export const TICKS_PER_SECOND = 10;
 export const ROUND_SECONDS = 120;
 export const MOVE_COOLDOWN_TICKS = 3;
 export const FUSE_TICKS = 15;
 export const BLAST_TICKS = 4;
-export const MAX_ACTIVE_PIECES = 2;
 export const COLOURS = ["white", "black"];
+export const DROP_ORDER = ["queen", "rook", "bishop", "knight", "pawn"];
 
 const BLOCK_CHANCE = 0.45;
 const PICKUP_CHANCE = 0.5;
@@ -71,12 +71,13 @@ export function playerAt(state, square) {
   return COLOURS.map((colour) => state.players[colour]).find((player) => player.alive && player.square === square) || null;
 }
 
-export function canDrop(state, player, type) {
-  if (!player.alive || !PIECE_TYPES.includes(type)) return false;
-  if (type !== "pawn" && player.inventory[type] <= 0) return false;
-  if (pieceAt(state, player.square)) return false;
-  const active = state.pieces.filter((piece) => piece.colour === player.colour).length;
-  return active < MAX_ACTIVE_PIECES;
+/** The piece a player drops next: the best one in the inventory, and a pawn when it is empty. */
+export function nextPiece(player) {
+  return DROP_ORDER.find((type) => type === "pawn" || player.inventory[type] > 0);
+}
+
+export function canDrop(state, player) {
+  return player.alive && pieceAt(state, player.square) === null;
 }
 
 export function canMoveTo(state, player, square) {
@@ -85,8 +86,9 @@ export function canMoveTo(state, player, square) {
   return other === null || other === player;
 }
 
-function dropPiece(state, player, type) {
-  if (!canDrop(state, player, type)) return;
+function dropPiece(state, player) {
+  if (!canDrop(state, player)) return;
+  const type = nextPiece(player);
   if (type !== "pawn") player.inventory[type] -= 1;
   state.pieces.push({ id: state.nextPieceId, type, colour: player.colour, square: player.square, fuse: FUSE_TICKS });
   state.nextPieceId += 1;
@@ -130,6 +132,7 @@ function detonate(state, firstPiece) {
     if (index === -1) continue;
     const squares = blastSquares(state, piece);
     state.pieces.splice(index, 1);
+    if (piece.type !== "pawn") state.players[piece.colour].inventory[piece.type] += 1;
     for (const square of squares) {
       state.blasts[square] = BLAST_TICKS;
       if (state.blocks[square]) {
@@ -155,7 +158,7 @@ function settleDeaths(state) {
   state.winner = alive.length === 1 ? alive[0] : "draw";
 }
 
-/** Advances the game one tick. Inputs: { white: { move: [rowDelta, columnDelta] | null, drop: type | null }, black: ... }. */
+/** Advances the game one tick. Inputs: { white: { move: [rowDelta, columnDelta] | null, drop: boolean }, black: ... }. */
 export function step(state, inputs) {
   if (state.over) return;
   state.tick += 1;
@@ -168,7 +171,7 @@ export function step(state, inputs) {
     if (!player.alive) continue;
     if (player.cooldown > 0) player.cooldown -= 1;
     const input = inputs[colour] || {};
-    if (input.drop) dropPiece(state, player, input.drop);
+    if (input.drop) dropPiece(state, player);
     movePlayer(state, player, input.move);
   }
   for (const piece of state.pieces) piece.fuse -= 1;

@@ -10,7 +10,7 @@ Live (once published): https://bomber-chess.jor.dev/
 2. Drop a piece on the square you stand on. One and a half seconds later it goes off and hits every square that piece attacks in chess: a rook sweeps its file and rank, a bishop its diagonals, a queen both, a knight jumps to its eight squares, a pawn hits the two diagonal squares ahead of it (ahead is up the board for white, down for black). Rubble, other pieces and kings stop sliding pieces, and that blocking square still gets hit. The square the piece stands on is not hit, because a piece never attacks its own square.
 3. A king on a hit square is captured and loses. If both kings go in the same tick it is a draw. Blasts linger for a moment, so walking into one also kills you.
 4. A fused piece caught in a blast goes off immediately, so chains happen.
-5. Pawns never run out. Every other piece is used up when you drop it. You can have two pieces fused at a time, and you cannot drop on a square that already holds a piece.
+5. There is one drop button and it always drops your best piece: a queen if you have one, else a rook, bishop, knight, and finally a pawn. Pawns never run out. Every other piece is out of your hands while it is fused and comes back to your inventory the moment it goes off, so a queen is one blast at a time, not one blast ever. There is no limit on how many pieces you can have fused, only that you cannot drop on a square that already holds one.
 6. The board starts with about 45 percent rubble, except around the two corners where the kings start (white at a1, black at h8). Blowing up rubble has a 50 percent chance of uncovering a piece: a knight most often, then a bishop, then a rook, rarely a queen. Walk over it to pick it up. A blast destroys a piece that is still lying on the ground.
 7. Each player starts with one knight besides the endless pawns.
 8. Dashed outlines show every square the fused pieces will hit if nothing changes. Blasts show as an orange square with a star.
@@ -25,9 +25,9 @@ I have only tuned the fuse, the walking speed and the rubble density by feel on 
 
 ## Controls
 
-- White: WASD to move, hold two keys for a diagonal. Space drops the selected piece. Q and E cycle through the pieces you have, 1 to 5 pick pawn, knight, bishop, rook or queen directly.
-- Black: arrow keys to move, Enter drops the selected piece, comma and period cycle through the pieces.
-- Touch and mouse: the d-pad under the board moves white, the pink button in its middle drops the selected piece, and the inventory buttons under "White" select and drop that piece in one tap. The d-pad is hidden on desktop. Both inventories are clickable, so black can be played with the mouse too. I have only tried the d-pad with a mouse and a phone sized browser window so far, not on a real phone.
+- White: WASD to move, hold two keys for a diagonal. Space drops your best piece.
+- Black: arrow keys to move, Enter drops your best piece.
+- Touch: the d-pad under the board moves white and the pink button in its middle drops. The inventory under each name shows what you hold and outlines the piece the next drop uses. The d-pad is hidden on desktop. I have only tried it with a mouse and a phone sized browser window so far, not on a real phone.
 
 ## How the game loop works
 

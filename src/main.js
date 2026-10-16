@@ -22,11 +22,7 @@ const input = createInput();
 const renderBoard = createBoardView(elements.board);
 const renderInventory = {};
 for (const colour of COLOURS) {
-  renderInventory[colour] = createInventoryView(elements.inventories[colour], colour, (type, button) => {
-    button.blur();
-    input.select(colour, type);
-    input.queueDrop(colour, type);
-  });
+  renderInventory[colour] = createInventoryView(elements.inventories[colour], colour);
   elements.keyHelp[colour].textContent = KEY_HELP[colour];
 }
 
@@ -78,7 +74,7 @@ function render(force) {
   if (!force && state.tick === renderedTick) return;
   renderedTick = state.tick;
   renderBoard(state, threatenedSquares(state));
-  for (const colour of COLOURS) renderInventory[colour](state, input.selection[colour]);
+  for (const colour of COLOURS) renderInventory[colour](state);
   elements.timer.textContent = formatTime(state.ticksLeft);
   if (state.over && elements.status.textContent !== statusText()) elements.status.textContent = statusText();
 }
@@ -112,7 +108,7 @@ function buildDpad() {
       button.className = "dpad-button";
       if (row === 0 && column === 0) {
         button.classList.add("dpad-drop");
-        button.innerHTML = `<span aria-hidden="true">●</span><span class="visually-hidden">Drop selected piece</span>`;
+        button.innerHTML = `<span aria-hidden="true">●</span><span class="visually-hidden">Drop your best piece</span>`;
         button.addEventListener("click", () => input.queueDrop("white"));
       } else {
         const direction = [row, column];
@@ -137,8 +133,6 @@ function buildDpad() {
   }
 }
 
-input.setAvailability((colour, type) => type === "pawn" || state.players[colour].inventory[type] > 0);
-input.onSelectionChange(() => render(true));
 elements.newGame.addEventListener("click", () => {
   elements.newGame.blur();
   startGame();
