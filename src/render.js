@@ -38,7 +38,7 @@ export function createBoardView(boardElement) {
       const deadPlayer = COLOURS.map((colour) => state.players[colour]).find((candidate) => !candidate.alive && candidate.square === square) || null;
       const pickup = state.pickups[square];
       let content = "";
-      if (pickup) content += `<span class="pickup" aria-hidden="true">${GLYPHS.white[pickup]}</span>`;
+      if (pickup) content += `<span class="pickup" aria-hidden="true"><span class="pickup-tag">+${GLYPHS.white[pickup]}</span></span>`;
       if (piece) {
         const fuse = Math.max(0, piece.fuse / FUSE_TICKS);
         content += `<span class="piece ${piece.colour}" style="--fuse: ${fuse.toFixed(2)}" aria-hidden="true">${GLYPHS[piece.colour][piece.type]}</span>`;
