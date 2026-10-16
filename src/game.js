@@ -199,8 +199,6 @@ function detonate(state, firstPiece) {
       if (state.blocks[square]) {
         state.blocks[square] = 0;
         state.pickups[square] = rollPickup(state);
-      } else if (state.pickups[square]) {
-        state.pickups[square] = null;
       }
       const chained = pieceAt(state, square);
       if (chained && !queue.includes(chained)) queue.push(chained);
