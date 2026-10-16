@@ -1,21 +1,22 @@
 import { SQUARES, WALK_STEPS, attackedSquares, stepFrom } from "./chess.js";
-import { STEPS_PER_SQUARE, blastSquares, canDrop, canMoveTo, createRandom, neighbours, nextPiece, pieceAt, playerAt } from "./game.js";
+import { FUSE_TICKS, STEPS_PER_SQUARE, blastSquares, canDrop, canMoveTo, createRandom, neighbours, nextPiece, pieceAt, playerAt } from "./game.js";
 
 const THINK_EVERY_TICKS = 6;
-const NOTICE_FUSE_TICKS = 20;
-const MISJUDGE_DANGER_CHANCE = 0.2;
+const REACTION_TICKS = 10;
 const TAKE_KILL_CHANCE = 0.5;
 const DROP_CHANCE_PER_THINK = 0.25;
 const ESCAPE_STEPS = 4;
+const IMMINENT_FUSE_TICKS = 2 * STEPS_PER_SQUARE;
 
-/** What the bot believes is dangerous: lingering flames, its own pieces, and enemy pieces whose fuse is short enough for it to have noticed. Chain reactions escape it. */
-function dangerMap(state, colour) {
+/** What the bot knows is dangerous: lingering flames, its own pieces, and enemy pieces it has had a moment to react to. Chain reactions escape it. With onlyImminent it marks just the flames and the pieces about to go off, the squares it must never cross. */
+function dangerMap(state, colour, onlyImminent = false) {
   const danger = new Uint8Array(SQUARES);
   for (let square = 0; square < SQUARES; square += 1) {
     if (state.blasts[square] > 0) danger[square] = 1;
   }
   for (const piece of state.pieces) {
-    if (piece.colour !== colour && piece.fuse > NOTICE_FUSE_TICKS) continue;
+    if (piece.colour !== colour && piece.fuse > FUSE_TICKS - REACTION_TICKS) continue;
+    if (onlyImminent && piece.fuse > IMMINENT_FUSE_TICKS) continue;
     for (const square of blastSquares(state, piece)) danger[square] = 1;
   }
   return danger;
@@ -103,7 +104,7 @@ function shouldDrop(state, player, danger, wantsHit) {
   return canDrop(state, player) && dropWorksFrom(state, player, danger, wantsHit, player.square);
 }
 
-/** A beatable opponent: it only thinks a few times a second, notices bombs late, sometimes misjudges danger and misses kill chances. Between thoughts it keeps walking. */
+/** A fair opponent: it thinks once per square, needs a moment to react to a new enemy piece, never ignores danger it knows about, and misses half its kill chances. Between thoughts it keeps walking. */
 export function createBot(colour, seed) {
   const random = createRandom(seed);
   let lastMove = null;
@@ -122,17 +123,19 @@ export function createBot(colour, seed) {
     const danger = dangerMap(state, colour);
     const steps = shuffledSteps(random);
 
-    const onOwnPiece = pieceAt(state, player.square) !== null;
-    if (danger[player.square] && (onOwnPiece || random() >= MISJUDGE_DANGER_CHANCE)) {
-      return remember({ move: firstStepToward(state, player, (square) => !danger[square], new Uint8Array(SQUARES), steps), drop: false });
+    if (danger[player.square]) {
+      const isSafe = (square) => !danger[square];
+      const cleanEscape = firstStepToward(state, player, isSafe, danger, steps);
+      const riskyEscape = cleanEscape || firstStepToward(state, player, isSafe, dangerMap(state, colour, true), steps);
+      return remember({ move: riskyEscape, drop: false });
     }
 
-    if (enemy.alive && random() < TAKE_KILL_CHANCE && shouldDrop(state, player, danger, (square) => square === enemy.square)) return { move: null, drop: true };
+    if (enemy.alive && random() < TAKE_KILL_CHANCE && shouldDrop(state, player, danger, (square) => square === enemy.square)) return remember({ move: null, drop: true });
 
     if (random() < DROP_CHANCE_PER_THINK) {
       const nearEnemy = (square) => enemy.alive && chebyshevDistance(square, enemy.square) <= 1;
       const isRubble = (square) => state.blocks[square] === 1;
-      if (shouldDrop(state, player, danger, nearEnemy) || shouldDrop(state, player, danger, isRubble)) return { move: null, drop: true };
+      if (shouldDrop(state, player, danger, nearEnemy) || shouldDrop(state, player, danger, isRubble)) return remember({ move: null, drop: true });
     }
 
     const hitsEnemyFrom = (square) => enemy.alive && dropWorksFrom(state, player, danger, (hit) => hit === enemy.square, square);
@@ -143,7 +146,7 @@ export function createBot(colour, seed) {
     const diggingRoute = enemy.alive ? pathToward(state, player, hitsEnemyFrom, danger, steps, true) : null;
     const rubbleAhead = diggingRoute ? diggingRoute.find((square) => state.blocks[square] === 1) : undefined;
     if (rubbleAhead !== undefined) {
-      if (shouldDrop(state, player, danger, (square) => square === rubbleAhead)) return { move: null, drop: true };
+      if (shouldDrop(state, player, danger, (square) => square === rubbleAhead)) return remember({ move: null, drop: true });
       const hitsRubbleFrom = (square) => dropWorksFrom(state, player, danger, (hit) => hit === rubbleAhead, square);
       const towardRubble = firstStepToward(state, player, hitsRubbleFrom, danger, steps);
       if (towardRubble) return remember({ move: towardRubble, drop: false });

@@ -20,7 +20,7 @@ I have only tuned the fuse, the walking speed and the rubble density by feel on 
 
 ## Modes
 
-- **Versus bot**: you are white, black is a bot. It steps out of danger, walks to a square from which its next piece hits your king and drops it there, digs through rubble that is in the way, and picks up pieces lying around. It is deliberately beatable: it only thinks about three times a second, it does not notice your fused pieces until the fuse is under a second, it misjudges danger one time in five (never for a piece it stands on itself) and takes only half of its kill chances. Those numbers are at the top of `src/bot.js`. This is the default on touch screens.
+- **Versus bot**: you are white, black is a bot. It steps out of danger, walks to a square from which its next piece hits your king and drops it there, digs through rubble that is in the way, and picks up pieces lying around. It is beatable without being cheap: it thinks once per square, needs half a second to react to a piece you drop, never ignores danger it knows about, and takes only half of its kill chances. It does not foresee chain reactions and always runs for the nearest safe square, so trapping it between two blasts or with a chain is how you win. Those numbers are at the top of `src/bot.js`. This is the default on touch screens.
 - **Two players, one keyboard**: both kings are human. This is the default when a mouse or trackpad is detected.
 
 ## Controls
