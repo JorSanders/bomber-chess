@@ -84,11 +84,11 @@ export function canDrop(state, player) {
   return player.alive && pieceAt(state, player.square) === null;
 }
 
-/** The one or two squares a king covers while it walks between them. */
-function coveredSquares(player) {
+/** The one to four squares a king covers at a position, since it can be between squares on both axes. */
+function coveredSquaresAt(x, y) {
   const squares = new Set();
-  for (const row of [Math.floor(player.y / STEPS_PER_SQUARE), Math.ceil(player.y / STEPS_PER_SQUARE)]) {
-    for (const column of [Math.floor(player.x / STEPS_PER_SQUARE), Math.ceil(player.x / STEPS_PER_SQUARE)]) {
+  for (const row of [Math.floor(y / STEPS_PER_SQUARE), Math.ceil(y / STEPS_PER_SQUARE)]) {
+    for (const column of [Math.floor(x / STEPS_PER_SQUARE), Math.ceil(x / STEPS_PER_SQUARE)]) {
       squares.add(squareIndex(row, column));
     }
   }
@@ -98,7 +98,7 @@ function coveredSquares(player) {
 /** A king can walk onto a square without rubble, and past a fused piece only while it still stands on it. Kings walk through each other. */
 export function canMoveTo(state, player, square) {
   if (square < 0 || state.blocks[square]) return false;
-  return pieceAt(state, square) === null || coveredSquares(player).includes(square);
+  return pieceAt(state, square) === null || coveredSquaresAt(player.x, player.y).includes(square);
 }
 
 function dropPiece(state, player) {
@@ -113,33 +113,32 @@ function clampPosition(value) {
   return Math.max(0, Math.min(MAX_POSITION, value));
 }
 
-/** Tries one step along one axis. Off the walking line the king first nudges sideways toward the open lane, like Bomberman's corner help. */
+/** Tries one step along one axis. The step is free when every square the king would then cover is walkable. When something is in the way and the king is off a lane, it nudges sideways toward an open lane instead, like Bomberman's corner help. */
 function stepAlong(state, player, rowDelta, columnDelta) {
-  const alongRows = rowDelta !== 0;
-  const position = alongRows ? player.y : player.x;
-  const across = alongRows ? player.x : player.y;
-  const delta = alongRows ? rowDelta : columnDelta;
-  if (across % STEPS_PER_SQUARE === 0) {
-    const next = clampPosition(position + delta);
-    if (next === position) return false;
-    const lane = across / STEPS_PER_SQUARE;
-    const low = Math.floor(next / STEPS_PER_SQUARE);
-    const high = Math.ceil(next / STEPS_PER_SQUARE);
-    const entered = alongRows ? [squareIndex(low, lane), squareIndex(high, lane)] : [squareIndex(lane, low), squareIndex(lane, high)];
-    if (!entered.every((square) => canMoveTo(state, player, square))) return false;
-    if (alongRows) player.y = next;
-    else player.x = next;
+  const nextX = clampPosition(player.x + columnDelta);
+  const nextY = clampPosition(player.y + rowDelta);
+  if (nextX === player.x && nextY === player.y) return false;
+  if (coveredSquaresAt(nextX, nextY).every((square) => canMoveTo(state, player, square))) {
+    player.x = nextX;
+    player.y = nextY;
     return true;
   }
+  const alongRows = rowDelta !== 0;
+  const across = alongRows ? player.x : player.y;
+  if (across % STEPS_PER_SQUARE === 0) return false;
+  const current = Math.round((alongRows ? player.y : player.x) / STEPS_PER_SQUARE);
   const nearestLane = Math.round(across / STEPS_PER_SQUARE);
-  const current = Math.round(position / STEPS_PER_SQUARE);
-  const aheadRow = alongRows ? current + delta : nearestLane;
-  const aheadColumn = alongRows ? nearestLane : current + delta;
-  if (!onBoard(aheadRow, aheadColumn) || !canMoveTo(state, player, squareIndex(aheadRow, aheadColumn))) return false;
-  const nudge = Math.sign(nearestLane * STEPS_PER_SQUARE - across);
-  if (alongRows) player.x += nudge;
-  else player.y += nudge;
-  return true;
+  const otherLane = nearestLane === Math.floor(across / STEPS_PER_SQUARE) ? Math.ceil(across / STEPS_PER_SQUARE) : Math.floor(across / STEPS_PER_SQUARE);
+  for (const lane of [nearestLane, otherLane]) {
+    const aheadRow = alongRows ? current + rowDelta : lane;
+    const aheadColumn = alongRows ? lane : current + columnDelta;
+    if (!onBoard(aheadRow, aheadColumn) || !canMoveTo(state, player, squareIndex(aheadRow, aheadColumn))) continue;
+    const nudge = Math.sign(lane * STEPS_PER_SQUARE - across);
+    if (alongRows) player.x += nudge;
+    else player.y += nudge;
+    return true;
+  }
+  return false;
 }
 
 /** Walks one step per tick. Two held directions try the one the king is already moving along first, then the other. */

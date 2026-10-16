@@ -6,7 +6,7 @@ Live (once published): https://bomber-chess.jor.dev/
 
 ## Rules
 
-1. You are a king. You walk up, down, left or right at about three squares a second, smoothly rather than square by square, and the game treats you as standing on whichever square your centre is on. If you press sideways while slightly off a lane and the lane ahead is open, you get nudged into it, the way Bomberman helps you around corners. No diagonals, kings walk through each other.
+1. You are a king. You walk up, down, left or right at about three squares a second, smoothly rather than square by square, and the game treats you as standing on whichever square your centre is on. In the open you can turn wherever you are. When something is in the way while you are off a lane, you get nudged sideways into the nearest open lane, the way Bomberman helps you around corners. No diagonals, kings walk through each other.
 2. Drop a piece on the square you stand on. Two and a half seconds later it goes off and hits every square that piece attacks in chess: a rook sweeps its file and rank, a bishop its diagonals, a queen both, a knight jumps to its eight squares, a pawn hits the two diagonal squares ahead of it (ahead is up the board for white, down for black). Rubble, other pieces and kings stop sliding pieces, and that blocking square still gets hit. The square the piece stands on blows up too, so you cannot hide on top of your own piece.
 3. A king on a hit square is captured and loses. If both kings go in the same tick it is a draw. Blasts linger for a moment, so walking into one also kills you.
 4. A fused piece caught in a blast goes off immediately, so chains happen.
