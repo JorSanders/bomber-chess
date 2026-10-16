@@ -54,7 +54,7 @@ function chebyshevDistance(a, b) {
 
 function dropSquares(state, player) {
   const isBlocked = (square) => state.blocks[square] === 1 || pieceAt(state, square) !== null || playerAt(state, square) !== null;
-  return attackedSquares(nextPiece(player), player.colour, player.square, isBlocked);
+  return [player.square, ...attackedSquares(nextPiece(player), player.colour, player.square, isBlocked)];
 }
 
 function hasEscape(state, player, hitSquares, danger) {

@@ -126,10 +126,10 @@ function rollPickup(state) {
   return picked;
 }
 
-/** The squares a dropped piece would hit right now. Rubble, other pieces and kings stop sliding pieces. */
+/** The squares a dropped piece would hit right now: its own square plus everything it attacks. Rubble, other pieces and kings stop sliding pieces. */
 export function blastSquares(state, piece) {
   const isBlocked = (square) => state.blocks[square] === 1 || pieceAt(state, square) !== null || playerAt(state, square) !== null;
-  return attackedSquares(piece.type, piece.colour, piece.square, isBlocked);
+  return [piece.square, ...attackedSquares(piece.type, piece.colour, piece.square, isBlocked)];
 }
 
 function detonate(state, firstPiece) {
