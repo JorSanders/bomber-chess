@@ -33,15 +33,18 @@ export function createBoardView(boardElement) {
     const king = document.createElement("span");
     king.className = `king ${colour}`;
     king.setAttribute("aria-hidden", "true");
-    king.textContent = GLYPHS[colour].king;
+    king.innerHTML = `<span class="king-glyph">${GLYPHS[colour].king}</span><span class="next-badge"></span>`;
     boardElement.appendChild(king);
     kings[colour] = king;
   }
 
-  /** Kings are overlays placed by their walking position, in squares. A king on a fused piece gets an orange ring, a dead one topples. */
+  /** Kings are overlays placed by their walking position, in squares. A badge shows the piece that drops next, a king on a fused piece gets an orange ring, a dead one topples. */
   function renderKing(state, colour) {
     const player = state.players[colour];
     const king = kings[colour];
+    const badge = king.querySelector(".next-badge");
+    const nextGlyph = GLYPHS[colour][nextPiece(player)];
+    if (badge.textContent !== nextGlyph) badge.textContent = nextGlyph;
     const column = player.x / STEPS_PER_SQUARE;
     const row = player.y / STEPS_PER_SQUARE;
     let transform = `translate(${(column * 100).toFixed(2)}%, ${(row * 100).toFixed(2)}%)`;

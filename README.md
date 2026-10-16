@@ -27,7 +27,7 @@ I have only tuned the fuse, the walking speed and the rubble density by feel on 
 
 - White: WASD to move. Space drops your best piece.
 - Black: arrow keys to move, Enter drops your best piece.
-- Touch: the d-pad under the board moves white and the pink button in its middle drops. Each player block says which piece drops next, the inventory outlines it, and on touch the drop button shows its glyph. The d-pad is hidden on desktop. I have only tried it with a mouse and a phone sized browser window so far, not on a real phone.
+- Touch: the d-pad under the board moves white and the pink button in its middle drops. A small yellow badge on each king shows the piece that drops next, each player block says it in words, the inventory outlines it, and on touch the drop button shows its glyph. The d-pad is hidden on desktop. I have only tried it with a mouse and a phone sized browser window so far, not on a real phone.
 
 ## How the game loop works
 

@@ -264,6 +264,26 @@ body {
   opacity: 0.55;
 }
 
+.king.dead .next-badge {
+  display: none;
+}
+
+.next-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 44%;
+  height: 44%;
+  font-size: calc(var(--square) * 0.3);
+  line-height: 1;
+  color: var(--ink);
+  background: var(--yellow);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-full);
+}
+
 .players {
   display: grid;
   grid-template-columns: 1fr 1fr;
