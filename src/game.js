@@ -58,6 +58,7 @@ export function createGame(seed) {
     pickups: new Array(SQUARES).fill(null),
     pieces: [],
     nextPieceId: 1,
+    queenSpawned: false,
     blasts: new Uint8Array(SQUARES),
     players,
   };
@@ -107,15 +108,22 @@ function movePlayer(state, player, direction) {
   }
 }
 
+/** Rolls what a blown up rubble square leaves behind. Only one queen shows up per game. */
 function rollPickup(state) {
   if (state.random() >= PICKUP_CHANCE) return null;
-  const total = PICKUP_WEIGHTS.reduce((sum, [, weight]) => sum + weight, 0);
+  const weights = PICKUP_WEIGHTS.filter(([type]) => type !== "queen" || !state.queenSpawned);
+  const total = weights.reduce((sum, [, weight]) => sum + weight, 0);
   let roll = state.random() * total;
-  for (const [type, weight] of PICKUP_WEIGHTS) {
+  let picked = weights[weights.length - 1][0];
+  for (const [type, weight] of weights) {
     roll -= weight;
-    if (roll < 0) return type;
+    if (roll < 0) {
+      picked = type;
+      break;
+    }
   }
-  return PICKUP_WEIGHTS[PICKUP_WEIGHTS.length - 1][0];
+  if (picked === "queen") state.queenSpawned = true;
+  return picked;
 }
 
 /** The squares a dropped piece would hit right now. Rubble, other pieces and kings stop sliding pieces. */
