@@ -17,6 +17,7 @@ function describeSquare(state, square) {
 
 export function createBoardView(boardElement) {
   const cells = [];
+  const kings = {};
   for (let square = 0; square < SQUARES; square += 1) {
     const cell = document.createElement("div");
     cell.className = "cell";
@@ -28,13 +29,31 @@ export function createBoardView(boardElement) {
     boardElement.appendChild(cell);
     cells.push(cell);
   }
+  for (const colour of COLOURS) {
+    const king = document.createElement("span");
+    king.className = `king ${colour}`;
+    king.setAttribute("aria-hidden", "true");
+    king.textContent = GLYPHS[colour].king;
+    boardElement.appendChild(king);
+    kings[colour] = king;
+  }
+
+  /** Kings are overlays that slide between squares, so a move reads as walking instead of a jump. */
+  function renderKing(state, colour) {
+    const player = state.players[colour];
+    const king = kings[colour];
+    const row = Math.floor(player.square / 8);
+    const column = player.square % 8;
+    king.style.transform = `translate(${column * 100}%, ${row * 100}%)`;
+    king.classList.toggle("teleport", state.tick === 0);
+    king.classList.toggle("dead", !player.alive);
+    king.classList.toggle("stacked", pieceAt(state, player.square) !== null);
+  }
 
   return function renderBoard(state) {
     for (let square = 0; square < SQUARES; square += 1) {
       const cell = cells[square];
       const piece = pieceAt(state, square);
-      const player = playerAt(state, square);
-      const deadPlayer = COLOURS.map((colour) => state.players[colour]).find((candidate) => !candidate.alive && candidate.square === square) || null;
       const pickup = state.pickups[square];
       let content = "";
       if (pickup) content += `<span class="pickup" aria-hidden="true"><span class="pickup-tag">+${GLYPHS.white[pickup]}</span></span>`;
@@ -42,14 +61,13 @@ export function createBoardView(boardElement) {
         const fuse = Math.max(0, piece.fuse / FUSE_TICKS);
         content += `<span class="piece ${piece.colour}" style="--fuse: ${fuse.toFixed(2)}" aria-hidden="true"><span class="bomb">${GLYPHS[piece.colour][piece.type]}</span></span>`;
       }
-      if (player) content += `<span class="king ${player.colour}" aria-hidden="true">${GLYPHS[player.colour].king}</span>`;
-      if (deadPlayer) content += `<span class="king ${deadPlayer.colour} dead" aria-hidden="true">${GLYPHS[deadPlayer.colour].king}</span>`;
       if (content !== cell.innerHTML) cell.innerHTML = content;
       cell.classList.toggle("block", state.blocks[square] === 1);
-      cell.classList.toggle("stacked", piece !== null && player !== null);
+      cell.classList.toggle("stacked", piece !== null && playerAt(state, square) !== null);
       cell.classList.toggle("blast", state.blasts[square] > 0);
       cell.setAttribute("aria-label", describeSquare(state, square));
     }
+    for (const colour of COLOURS) renderKing(state, colour);
   };
 }
 

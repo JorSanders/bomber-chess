@@ -1,5 +1,5 @@
 import { createBot } from "./bot.js";
-import { COLOURS, TICKS_PER_SECOND, createGame, step } from "./game.js";
+import { COLOURS, MOVE_COOLDOWN_TICKS, TICKS_PER_SECOND, createGame, step } from "./game.js";
 import { KEY_HELP, createInput } from "./input.js";
 import { createBoardView, createInventoryView, formatTime } from "./render.js";
 
@@ -18,6 +18,7 @@ const elements = {
 };
 
 const parameters = new URLSearchParams(location.search);
+document.documentElement.style.setProperty("--walk", `${(MOVE_COOLDOWN_TICKS * 1000) / TICKS_PER_SECOND}ms`);
 const input = createInput();
 const renderBoard = createBoardView(elements.board);
 const renderInventory = {};

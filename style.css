@@ -9,6 +9,7 @@
   --black-ring: var(--pink);
   --board: min(100vw - 2 * var(--space-4), 100dvh - 16rem, 520px);
   --square: calc(var(--board) / 8);
+  --walk: 300ms;
 }
 
 [hidden] {
@@ -81,6 +82,7 @@ body {
 }
 
 .board {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(8, var(--square));
   grid-template-rows: repeat(8, var(--square));
@@ -203,10 +205,6 @@ body {
   transform: translate(-12%, 12%) scale(0.85);
 }
 
-.cell.stacked .king {
-  transform: translate(24%, -24%) scale(0.6);
-}
-
 @keyframes pulse {
   0%,
   100% {
@@ -219,10 +217,23 @@ body {
 }
 
 .king {
-  z-index: 1;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--square);
+  height: var(--square);
+  display: grid;
+  place-items: center;
   font-size: calc(var(--square) * 0.74);
+  line-height: 1;
   color: var(--ink);
   isolation: isolate;
+  pointer-events: none;
+  transition: transform var(--walk) linear;
+}
+
+.king.teleport {
+  transition: none;
 }
 
 .king::before {
@@ -242,7 +253,12 @@ body {
 
 .king.dead {
   opacity: 0.55;
-  transform: rotate(90deg);
+  rotate: 90deg;
+}
+
+.king.stacked {
+  scale: 0.6;
+  translate: 24% -24%;
 }
 
 .players {
